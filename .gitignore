@@ -1,0 +1,43 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.venv*/
+venv*/
+env*/
+
+# Jupyter
+.ipynb_checkpoints/
+# keep notebooks tracked; do not ignore *.ipynb
+api_key.ipynb
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Caches & build
+.pytest_cache/
+.mypy_cache/
+.cache/
+dist/
+build/
+
+# Environment files (secrets)
+.env
+*.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+
