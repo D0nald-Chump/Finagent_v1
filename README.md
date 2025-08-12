@@ -49,11 +49,19 @@ setx OPENAI_API_KEY "sk-..."
 
 ## Run
 
+Install deps (once):
+
 ```bash
-python main.py
+pip install -r requirements.txt
 ```
 
-This will run the pipeline and generate `main.ipynb` reproducing the run.
+Run with a specific PDF (recommended):
+
+```bash
+python main.py --pdf TSLA-Q2-2025-Update.pdf
+```
+
+If `--pdf` is omitted, the app will try to use `TSLA-Q2-2025-Update.pdf` in the repo root if present; otherwise it falls back to a small dummy stub text. The run will also generate `main.ipynb` reproducing the run.
 
 ## Project Layout
 

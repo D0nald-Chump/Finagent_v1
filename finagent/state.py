@@ -38,7 +38,19 @@ class State(TypedDict, total=False):
 
 
 def log(msg: str) -> None:
-    print(msg)
+    """Robust console log that won't crash on Windows cp1252 encoding.
+
+    Replaces non-encodable characters to avoid UnicodeEncodeError.
+    """
+    try:
+        print(msg)
+    except Exception:
+        import sys
+        try:
+            sys.stdout.buffer.write(((msg or "") + "\n").encode(sys.stdout.encoding or "utf-8", errors="replace"))
+        except Exception:
+            # Fallback: plain ASCII-safe line
+            sys.stdout.write("[log]" + "\n")
 
 
 def merge(state: State, patch: Dict[str, Any]) -> State:

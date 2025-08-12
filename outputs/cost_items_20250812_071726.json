@@ -1,0 +1,145 @@
+[
+  {
+    "node": "Planner",
+    "role": "planner",
+    "input_tokens": 141,
+    "output_tokens": 215,
+    "input_cost": 0.00705,
+    "output_cost": 0.03225,
+    "total_cost": 0.0393,
+    "prompt_preview": "\\\nYou are the Planner Agent for a financial-report analysis DAG.\nDecompose the task into explicit sections and steps, referencing any provided rules.\nOnly output a compact JSON with keys: tasks[].\n",
+    "output_preview": "{\"tasks\":[\"balance_sheet\",\"income_statement\",\"cash_flows\"]}"
+  },
+  {
+    "node": "IS_Worker",
+    "role": "worker",
+    "input_tokens": 12063,
+    "output_tokens": 2132,
+    "input_cost": 0.6031500000000001,
+    "output_cost": 0.31980000000000003,
+    "total_cost": 0.9229500000000002,
+    "prompt_preview": "\\\nYou are the Income Statement Worker. Focus on revenue quality, gross margin logic,\nand alignment with receivables trends. Output concise markdown with key KPIs and commentary.\n",
+    "output_preview": "Key KPIs (Q2 2025)\n- Total revenue: $22,496m (-12% YoY)\n- Total gross profit: $3,878m (-15% YoY)\n- GAAP gross margin: 17.2% (-71 bp YoY)\n- Operating income: $923m (-42% YoY)\n\nSegment-level profitabili"
+  },
+  {
+    "node": "CF_Worker",
+    "role": "worker",
+    "input_tokens": 12062,
+    "output_tokens": 2125,
+    "input_cost": 0.6031,
+    "output_cost": 0.31875,
+    "total_cost": 0.92185,
+    "prompt_preview": "\\\nYou are the Cash Flows Worker. Reconcile Net Income vs CFO, highlight CapEx trends,\nand non-cash adjustments. Output concise markdown with bullet points.\n",
+    "output_preview": "- Snapshot\n  - Net income (GAAP, Q2‑2025): $1,190M (net income attributable to common stockholders $1,172M)\n  - Net cash provided by operating activities (CFO): $2,540M\n  - Capital expenditures (CapEx"
+  },
+  {
+    "node": "BS_Worker",
+    "role": "worker",
+    "input_tokens": 12074,
+    "output_tokens": 3404,
+    "input_cost": 0.6037,
+    "output_cost": 0.5105999999999999,
+    "total_cost": 1.1143,
+    "prompt_preview": "\\\nYou are the Balance Sheet Worker. Extract and analyze the balance sheet.\nCheck asset/liability consistency, off-balance obligations, and working-capital changes.\nOutput concise markdown with key tab",
+    "output_preview": "Below is a concise balance-sheet extraction, checks for consistency, working‑capital movement, off‑balance items and key observations. All amounts in millions of USD.\n\nSummary balance sheet (selected "
+  },
+  {
+    "node": "BS_Checker",
+    "role": "local_checker",
+    "input_tokens": 1602,
+    "output_tokens": 2243,
+    "input_cost": 0.0801,
+    "output_cost": 0.33644999999999997,
+    "total_cost": 0.41655,
+    "prompt_preview": "\\\nYou are the Balance Sheet Checker. Validate the BS draft against rules and accounting logic.\nReturn JSON: {\"passed\": bool, \"feedback\": [{\"issue\": str, \"rule_id\": str, \"suggestion\": str}]}\nKeep feedb",
+    "output_preview": "{\n  \"passed\": false,\n  \"feedback\": [\n    {\n      \"issue\": \"Summed selected non‑current asset lines (5,230 + 38,574 + 5,633 + 1,235 + 6,721 + 4,857 = 62,250) do not reconcile to implied non‑current ass"
+  },
+  {
+    "node": "CF_Checker",
+    "role": "local_checker",
+    "input_tokens": 767,
+    "output_tokens": 2120,
+    "input_cost": 0.03835,
+    "output_cost": 0.318,
+    "total_cost": 0.35635,
+    "prompt_preview": "\\\nYou are the Cash Flows Checker. Validate the CF draft against rules and reconciliations.\nReturn JSON: {\"passed\": bool, \"feedback\": [{\"issue\": str, \"rule_id\": str, \"suggestion\": str}]}\n",
+    "output_preview": "{\n  \"passed\": true,\n  \"feedback\": [\n    {\n      \"issue\": \"Arithmetic / reconciliation check\",\n      \"rule_id\": \"R1\",\n      \"suggestion\": \"The reconciliation math is correct: 1,190 +1,433 +635 +52 +187"
+  },
+  {
+    "node": "IS_Checker",
+    "role": "local_checker",
+    "input_tokens": 832,
+    "output_tokens": 3874,
+    "input_cost": 0.0416,
+    "output_cost": 0.5811,
+    "total_cost": 0.6226999999999999,
+    "prompt_preview": "\\\nYou are the Income Statement Checker. Validate the IS draft against rules.\nReturn JSON: {\"passed\": bool, \"feedback\": [{\"issue\": str, \"rule_id\": str, \"suggestion\": str}]}\n",
+    "output_preview": "{\n  \"passed\": false,\n  \"feedback\": [\n    {\n      \"issue\": \"Top-line and gross-profit segment totals do not reconcile with the consolidated totals.\",\n      \"rule_id\": \"R0_reconciliation\",\n      \"sugges"
+  },
+  {
+    "node": "IS_Worker",
+    "role": "worker",
+    "input_tokens": 12063,
+    "output_tokens": 1608,
+    "input_cost": 0.6031500000000001,
+    "output_cost": 0.2412,
+    "total_cost": 0.84435,
+    "prompt_preview": "\\\nYou are the Income Statement Worker. Focus on revenue quality, gross margin logic,\nand alignment with receivables trends. Output concise markdown with key KPIs and commentary.\n",
+    "output_preview": "Key KPIs (Q2 2025)\n- Total revenue: $22,496M (-12% YoY)\n  - Automotive total: $16,661M (-16% YoY)\n    - Automotive sales: $15,787M\n    - Regulatory credits: $439M (down from $890M YoY)\n    - Automotiv"
+  },
+  {
+    "node": "BS_Worker",
+    "role": "worker",
+    "input_tokens": 12074,
+    "output_tokens": 4441,
+    "input_cost": 0.6037,
+    "output_cost": 0.6661499999999999,
+    "total_cost": 1.26985,
+    "prompt_preview": "\\\nYou are the Balance Sheet Worker. Extract and analyze the balance sheet.\nCheck asset/liability consistency, off-balance obligations, and working-capital changes.\nOutput concise markdown with key tab",
+    "output_preview": "Below is a concise extraction and analysis of the balance sheet (all amounts in millions USD).\n\nKey balance-sheet lines (selected)\n- Periods: 30‑Jun‑24 | 31‑Mar‑25 | 30‑Jun‑25\n- Cash, cash equivalents"
+  },
+  {
+    "node": "BS_Checker",
+    "role": "local_checker",
+    "input_tokens": 1487,
+    "output_tokens": 2352,
+    "input_cost": 0.07435000000000001,
+    "output_cost": 0.35279999999999995,
+    "total_cost": 0.42715,
+    "prompt_preview": "\\\nYou are the Balance Sheet Checker. Validate the BS draft against rules and accounting logic.\nReturn JSON: {\"passed\": bool, \"feedback\": [{\"issue\": str, \"rule_id\": str, \"suggestion\": str}]}\nKeep feedb",
+    "output_preview": "{\n  \"passed\": false,\n  \"feedback\": [\n    {\n      \"issue\": \"Headline 'cash, cash equivalents & investments' (36,782) is not reconciled to 'cash and cash equivalents and restricted cash' on the cash-flo"
+  },
+  {
+    "node": "IS_Checker",
+    "role": "local_checker",
+    "input_tokens": 885,
+    "output_tokens": 3411,
+    "input_cost": 0.044250000000000005,
+    "output_cost": 0.5116499999999999,
+    "total_cost": 0.5559,
+    "prompt_preview": "\\\nYou are the Income Statement Checker. Validate the IS draft against rules.\nReturn JSON: {\"passed\": bool, \"feedback\": [{\"issue\": str, \"rule_id\": str, \"suggestion\": str}]}\n",
+    "output_preview": "{\n  \"passed\": false,\n  \"feedback\": [\n    {\n      \"issue\": \"Inventory days-of-supply (24 days) is inconsistent with income-statement-derived COGS.\",\n      \"rule_id\": \"R_INV_DAYS_MISMATCH\",\n      \"sugge"
+  },
+  {
+    "node": "TotalChecker",
+    "role": "global_checker",
+    "input_tokens": 3032,
+    "output_tokens": 2360,
+    "input_cost": 0.1516,
+    "output_cost": 0.354,
+    "total_cost": 0.5056,
+    "prompt_preview": "\\\nYou are the Global Consistency Checker. Verify cross-statement consistency\n(BS vs IS vs CF), terminology normalization, and surface doc-wide red flags.\nReturn JSON: {\"suggestions\": [{\"area\": str, \"a",
+    "output_preview": "{\n  \"suggestions\": [\n    {\n      \"area\": \"Balance-sheet totals (Q2‑2025)\",\n      \"action\": \"Reconcile total assets vs total liabilities + equity for 30‑Jun‑25. Current figures (Total assets = 128,567;"
+  },
+  {
+    "node": "Aggregator",
+    "role": "synthesizer",
+    "input_tokens": 4813,
+    "output_tokens": 2923,
+    "input_cost": 0.24065,
+    "output_cost": 0.43845,
+    "total_cost": 0.6791,
+    "prompt_preview": "\\\nYou are the Aggregator/Synthesizer. Merge validated sections into an\ninvestor-facing brief with a short executive summary, a compact KPI table,\na risk flags list, and the global suggestions. Output ",
+    "output_preview": "# Investor Brief — Q2 2025 (period end 30‑Jun‑25)\n\n## Executive summary (short)\n- Liquidity remains strong: headline cash & investments $36,782M vs total debt $7,220M → net cash ≈ $29,562M. Current ra"
+  }
+]

@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import argparse
+from datetime import datetime
+import json as _json
 
 from finagent.config import MODEL_NAME, PRICING
 from finagent.costing import COST_LOG, summarize_cost
@@ -38,6 +41,22 @@ def print_report(state: State) -> None:
     print("\n=== Total Cost Summary ===")
     print(json.dumps(summarize_cost(), indent=2))
 
+
+def save_outputs(state: State, out_dir: Path) -> None:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    report_text = state.get("final_report", "<no report>")
+    (out_dir / f"report_{timestamp}.md").write_text(report_text, encoding="utf-8")
+
+    # Persist raw cost items and summary for auditing
+    from finagent.costing import COST_LOG, summarize_cost
+    (out_dir / f"cost_items_{timestamp}.json").write_text(
+        _json.dumps(COST_LOG, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    (out_dir / f"cost_summary_{timestamp}.json").write_text(
+        _json.dumps(summarize_cost(), ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
 def export_run_as_notebook(ipynb_path: Path) -> None:
     import nbformat as nbf
@@ -81,8 +100,18 @@ print(summarize_cost())
 
 
 def main() -> None:
-    final_state = run_pipeline({})
+    parser = argparse.ArgumentParser(description="Run Finagent pipeline")
+    parser.add_argument("--pdf", type=str, default=None, help="Path to financial report PDF")
+    parser.add_argument("--outdir", type=str, default="outputs", help="Directory to save outputs")
+    args = parser.parse_args()
+
+    initial_state: State = {}
+    if args.pdf:
+        initial_state = {"ctx": {"pdf_path": args.pdf}}
+
+    final_state = run_pipeline(initial_state)
     print_report(final_state)
+    save_outputs(final_state, Path(args.outdir))
     export_run_as_notebook(Path("main.ipynb"))
 
 

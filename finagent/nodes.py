@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict
+from pathlib import Path
 
 from .config import MODEL_NAME
 from .costing import log_cost
@@ -23,7 +24,53 @@ from .state import State, merge, log, MAX_RETRIES
 def readpdf_agent(state: State) -> State:
     log("→ ReadPDFAgent")
     ctx = dict(state.get("ctx", {}))
-    ctx.update({"pdf_text": "Dummy PDF text with tables & figures about a fictional company FY2024."})
+
+    # 1) If pdf_text already provided upstream, keep it
+    existing_text = ctx.get("pdf_text")
+    if isinstance(existing_text, str) and existing_text.strip():
+        return merge(state, {"ctx": ctx})
+
+    # 2) Build candidate PDF paths: ctx.pdf_path then default TSLA file
+    candidates: list[Path] = []
+    pdf_path_value = ctx.get("pdf_path")
+    if isinstance(pdf_path_value, str) and pdf_path_value.strip():
+        candidates.append(Path(pdf_path_value))
+    default_pdf = Path("TSLA-Q2-2025-Update.pdf")
+    if default_pdf.exists():
+        candidates.append(default_pdf)
+
+    extracted_text: str | None = None
+    for path in candidates:
+        try:
+            if not path.exists():
+                continue
+            # Lazy import so the rest of the app works even without pypdf installed
+            try:
+                from pypdf import PdfReader  # type: ignore
+            except Exception as e:
+                log(f"pypdf not available: {e}")
+                continue
+
+            reader = PdfReader(str(path))
+            pages_text: list[str] = []
+            for page in getattr(reader, "pages", []):
+                try:
+                    pages_text.append(page.extract_text() or "")
+                except Exception:
+                    pages_text.append("")
+            text_joined = "\n".join(pages_text).strip()
+            if text_joined:
+                extracted_text = text_joined
+                ctx["pdf_path"] = str(path.resolve())
+                break
+        except Exception as e:
+            log(f"PDF read failed for {path}: {e}")
+
+    # 3) Fallback to dummy text if extraction failed
+    if not extracted_text:
+        extracted_text = "Dummy PDF text with tables & figures about a fictional company FY2024."
+
+    ctx["pdf_text"] = extracted_text
     return merge(state, {"ctx": ctx})
 
 
