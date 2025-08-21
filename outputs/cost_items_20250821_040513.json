@@ -1,0 +1,167 @@
+[
+  {
+    "node": "Planner",
+    "role": "planner",
+    "input_tokens": 141,
+    "output_tokens": 215,
+    "input_cost": 0.00705,
+    "output_cost": 0.03225,
+    "total_cost": 0.0393,
+    "prompt_preview": "\\\nYou are the Planner Agent for a financial-report analysis DAG.\nDecompose the task into explicit sections and steps, referencing any provided rules.\nOnly output a compact JSON with keys: tasks[].\n",
+    "output_preview": "{\"tasks\":[\"balance_sheet\",\"income_statement\",\"cash_flows\"]}"
+  },
+  {
+    "node": "IS_Worker",
+    "role": "worker",
+    "input_tokens": 12149,
+    "output_tokens": 2511,
+    "input_cost": 0.60745,
+    "output_cost": 0.37665,
+    "total_cost": 0.9841,
+    "prompt_preview": "\\\nYou are the Income Statement Analyst. Your task is to analyze earnings and profitability.\n\nCORE RESPONSIBILITIES:\n- Focus on revenue quality, growth trends, and margin analysis\n- Examine gross margi",
+    "output_preview": "Summary — Q2 2025 (Tesla) — income-statement focused\n\nKey KPIs\n- Total revenue: $22.50B, -12% YoY\n  - Automotive (total): $16.66B, -16% YoY\n    - Automotive sales (vehicles): $15.79B\n    - Regulatory "
+  },
+  {
+    "node": "CF_Worker",
+    "role": "worker",
+    "input_tokens": 12154,
+    "output_tokens": 2916,
+    "input_cost": 0.6077,
+    "output_cost": 0.43739999999999996,
+    "total_cost": 1.0451,
+    "prompt_preview": "\\\nYou are the Cash Flow Analyst. Your task is to analyze cash generation and capital allocation.\n\nCORE RESPONSIBILITIES:\n- Reconcile Net Income vs Cash Flow from Operations (CFO)\n- Highlight CapEx tre",
+    "output_preview": "Summary — Q2 2025 cash flow & capital allocation (concise)\n\n- Core picture\n  - GAAP net income (Q2’25, total) = $1,190m; net cash provided by operating activities (CFO) = $2,540m; free cash flow = $14"
+  },
+  {
+    "node": "BS_Worker",
+    "role": "worker",
+    "input_tokens": 12155,
+    "output_tokens": 3629,
+    "input_cost": 0.60775,
+    "output_cost": 0.54435,
+    "total_cost": 1.1521,
+    "prompt_preview": "\\\nYou are the Balance Sheet Analyst. Your task is to extract and analyze balance sheet data.\n\nCORE RESPONSIBILITIES:\n- Extract key balance sheet items with accurate figures\n- Check asset/liability con",
+    "output_preview": "Summary of key balance sheet figures (amounts in millions USD)\n\n| Line item | 30-Jun-25 | 31-Mar-25 | 30-Jun-24 | Q/Q change | YoY change |\n|---|---:|---:|---:|---:|---:|\n| Cash, cash equivalents & in"
+  },
+  {
+    "node": "BS_Checker",
+    "role": "local_checker",
+    "input_tokens": 1507,
+    "output_tokens": 2646,
+    "input_cost": 0.07535,
+    "output_cost": 0.3969,
+    "total_cost": 0.47224999999999995,
+    "prompt_preview": "\\\nYou are the Balance Sheet Checker. Validate the BS draft against rules and accounting logic.\nReturn JSON: {\"passed\": bool, \"feedback\": [{\"issue\": str, \"rule_id\": str, \"suggestion\": str}]}\nKeep feedb",
+    "output_preview": "{\n  \"passed\": false,\n  \"feedback\": [\n    {\n      \"issue\": \"Current liabilities line items shown in the table do not sum to the reported Total current liabilities (30,008).\",\n      \"rule_id\": \"R1\",\n   "
+  },
+  {
+    "node": "IS_Checker",
+    "role": "local_checker",
+    "input_tokens": 1340,
+    "output_tokens": 3323,
+    "input_cost": 0.067,
+    "output_cost": 0.49844999999999995,
+    "total_cost": 0.56545,
+    "prompt_preview": "\\\nYou are the Income Statement Checker. Validate the IS draft against rules.\nReturn JSON: {\"passed\": bool, \"feedback\": [{\"issue\": str, \"rule_id\": str, \"suggestion\": str}]}\n",
+    "output_preview": "{\n  \"passed\": false,\n  \"feedback\": [\n    {\n      \"issue\": \"Minor rounding inconsistency in Automotive subtotal vs components.\",\n      \"rule_id\": \"R1\",\n      \"suggestion\": \"Automotive total is reported"
+  },
+  {
+    "node": "CF_Checker",
+    "role": "local_checker",
+    "input_tokens": 1238,
+    "output_tokens": 2452,
+    "input_cost": 0.061900000000000004,
+    "output_cost": 0.36779999999999996,
+    "total_cost": 0.42969999999999997,
+    "prompt_preview": "\\\nYou are the Cash Flows Checker. Validate the CF draft against rules and reconciliations.\nReturn JSON: {\"passed\": bool, \"feedback\": [{\"issue\": str, \"rule_id\": str, \"suggestion\": str}]}\n",
+    "output_preview": "{\n  \"passed\": false,\n  \"feedback\": [\n    {\n      \"issue\": \"No full reconciliation of change in cash balance to the three cash‑flow sections (Operating, Investing, Financing) and FX/other reconcilers.\""
+  },
+  {
+    "node": "BS_Worker",
+    "role": "worker",
+    "input_tokens": 14045,
+    "output_tokens": 4720,
+    "input_cost": 0.70225,
+    "output_cost": 0.708,
+    "total_cost": 1.41025,
+    "prompt_preview": "\\\nYou are the Balance Sheet Analyst. Your task is to extract and analyze balance sheet data.\n\nCORE RESPONSIBILITIES:\n- Extract key balance sheet items with accurate figures\n- Check asset/liability con",
+    "output_preview": "Revised Q2‑2025 Balance‑Sheet Draft — corrections per checker feedback\n(Amounts in millions USD)\n\nSummary of key balance sheet figures\n\n| Line item | 30‑Jun‑25 | 31‑Mar‑25 | 30‑Jun‑24 | Q/Q change | Y"
+  },
+  {
+    "node": "IS_Worker",
+    "role": "worker",
+    "input_tokens": 14208,
+    "output_tokens": 7257,
+    "input_cost": 0.7104,
+    "output_cost": 1.08855,
+    "total_cost": 1.79895,
+    "prompt_preview": "\\\nYou are the Income Statement Analyst. Your task is to analyze earnings and profitability.\n\nCORE RESPONSIBILITIES:\n- Focus on revenue quality, growth trends, and margin analysis\n- Examine gross margi",
+    "output_preview": "Summary — Q2 2025 (Tesla) — income‑statement focused (REVISED to address checklist)\n\nKey KPIs (with prior‑period amounts for verification)\n- Total revenue: $22,496M (-12% YoY; Q2‑24: $25,500M)\n  - Aut"
+  },
+  {
+    "node": "BS_Checker",
+    "role": "local_checker",
+    "input_tokens": 2278,
+    "output_tokens": 2869,
+    "input_cost": 0.1139,
+    "output_cost": 0.43035,
+    "total_cost": 0.54425,
+    "prompt_preview": "\\\nYou are the Balance Sheet Checker. Validate the BS draft against rules and accounting logic.\nReturn JSON: {\"passed\": bool, \"feedback\": [{\"issue\": str, \"rule_id\": str, \"suggestion\": str}]}\nKeep feedb",
+    "output_preview": "{\n  \"passed\": false,\n  \"feedback\": [\n    {\n      \"issue\": \"Incorrect cash‑flow sign interpretation for movements in liabilities.\",\n      \"rule_id\": \"R1\",\n      \"suggestion\": \"Rework the narrative: dec"
+  },
+  {
+    "node": "CF_Worker",
+    "role": "worker",
+    "input_tokens": 14089,
+    "output_tokens": 7308,
+    "input_cost": 0.70445,
+    "output_cost": 1.0961999999999998,
+    "total_cost": 1.8006499999999999,
+    "prompt_preview": "\\\nYou are the Cash Flow Analyst. Your task is to analyze cash generation and capital allocation.\n\nCORE RESPONSIBILITIES:\n- Reconcile Net Income vs Cash Flow from Operations (CFO)\n- Highlight CapEx tre",
+    "output_preview": "Summary — Q2 2025 cash flow & capital allocation (revised to address checker feedback)\n\n- Core picture (concise)\n  - GAAP net income (Q2’25) = $1,190m; net cash provided by operating activities (CFO) "
+  },
+  {
+    "node": "IS_Checker",
+    "role": "local_checker",
+    "input_tokens": 3654,
+    "output_tokens": 4115,
+    "input_cost": 0.1827,
+    "output_cost": 0.61725,
+    "total_cost": 0.7999499999999999,
+    "prompt_preview": "\\\nYou are the Income Statement Checker. Validate the IS draft against rules.\nReturn JSON: {\"passed\": bool, \"feedback\": [{\"issue\": str, \"rule_id\": str, \"suggestion\": str}]}\n",
+    "output_preview": "{\n  \"passed\": false,\n  \"feedback\": [\n    {\n      \"issue\": \"Arithmetic inconsistency between operating income / other items and reported GAAP net income (mismatch of $374M).\",\n      \"rule_id\": \"R1\",\n  "
+  },
+  {
+    "node": "CF_Checker",
+    "role": "local_checker",
+    "input_tokens": 2941,
+    "output_tokens": 2612,
+    "input_cost": 0.14705,
+    "output_cost": 0.3918,
+    "total_cost": 0.5388499999999999,
+    "prompt_preview": "\\\nYou are the Cash Flows Checker. Validate the CF draft against rules and reconciliations.\nReturn JSON: {\"passed\": bool, \"feedback\": [{\"issue\": str, \"rule_id\": str, \"suggestion\": str}]}\n",
+    "output_preview": "{\n  \"passed\": true,\n  \"feedback\": [\n    {\n      \"issue\": \"Arithmetic and high-level reconciliations internally consistent\",\n      \"rule_id\": \"R_ARITH_01\",\n      \"suggestion\": \"No arithmetic errors fou"
+  },
+  {
+    "node": "TotalChecker",
+    "role": "global_checker",
+    "input_tokens": 8767,
+    "output_tokens": 3808,
+    "input_cost": 0.43835,
+    "output_cost": 0.5711999999999999,
+    "total_cost": 1.00955,
+    "prompt_preview": "\\\nYou are the Global Consistency Checker. Verify cross-statement consistency\n(BS vs IS vs CF), terminology normalization, and surface doc-wide red flags.\nReturn JSON: {\"suggestions\": [{\"area\": str, \"a",
+    "output_preview": "{\"suggestions\":[{\"area\":\"Consolidated net income (cross‑statement)\",\"action\":\"Resolve the $1,172M vs $1,190M discrepancy. Confirm whether $1,190M is consolidated net income (including noncontrolling i"
+  },
+  {
+    "node": "Aggregator",
+    "role": "synthesizer",
+    "input_tokens": 10784,
+    "output_tokens": 3143,
+    "input_cost": 0.5392,
+    "output_cost": 0.4714499999999999,
+    "total_cost": 1.01065,
+    "prompt_preview": "\\\nYou are the Aggregator/Synthesizer. Merge validated sections into an\ninvestor-facing brief with a short executive summary, a compact KPI table,\na risk flags list, and the global suggestions. Output ",
+    "output_preview": "# Executive summary\n- Balance-sheet strength: cash & investments of $36,782m, low consolidated leverage (total debt $7,220m → debt/equity 9.3%; debt/assets 5.6%) and large net cash position (total net"
+  }
+]

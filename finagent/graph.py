@@ -8,43 +8,73 @@ from .nodes import (
     planner_agent,
     total_checker,
     aggregator,
-    balance_sheet_worker,
-    income_statement_worker,
-    cash_flows_worker,
-    bs_checker,
-    is_checker,
-    cf_checker,
+    generator,
+    checker,
+    router,
     join_barrier,
     join_route,
-    route_bs,
-    route_is,
-    route_cf,
 )
 
 
-def build_sections_subgraph() -> StateGraph:
+def build_statement_processor_subgraph(statement_type: str) -> StateGraph:
+    """
+    Build a parameterized subgraph for processing a specific financial statement type.
+    
+    Args:
+        statement_type: One of "balance_sheet", "income_statement", "cash_flows"
+    
+    Returns:
+        A compiled subgraph that processes the specified statement type
+    """
     sg = StateGraph(State)
-    sg.add_node("BS_Worker", balance_sheet_worker)
-    sg.add_node("IS_Worker", income_statement_worker)
-    sg.add_node("CF_Worker", cash_flows_worker)
-    sg.add_node("BS_Checker", bs_checker)
-    sg.add_node("IS_Checker", is_checker)
-    sg.add_node("CF_Checker", cf_checker)
+    
+    # Create statement-specific functions using the factories
+    statement_generator = generator(statement_type)
+    statement_checker = checker(statement_type)
+    statement_router = router(statement_type)
+    
+    # Add nodes with generic names
+    sg.add_node("Generator", statement_generator)
+    sg.add_node("Checker", statement_checker)
+    
+    # Build the Generator -> Checker -> (retry or done) flow
+    sg.add_edge(START, "Generator")
+    sg.add_edge("Generator", "Checker")
+    sg.add_conditional_edges("Checker", statement_router, {"retry": "Generator", "done": END})
+    
+    return sg
+
+
+def build_sections_subgraph() -> StateGraph:
+    """
+    Build the main sections processing subgraph using individual statement processors.
+    """
+    sg = StateGraph(State)
+    
+    # Create individual statement processor subgraphs
+    bs_subgraph = build_statement_processor_subgraph("balance_sheet").compile()
+    is_subgraph = build_statement_processor_subgraph("income_statement").compile()
+    cf_subgraph = build_statement_processor_subgraph("cash_flows").compile()
+    
+    # Add the subgraphs as nodes
+    sg.add_node("BS_Processor", bs_subgraph)
+    sg.add_node("IS_Processor", is_subgraph)
+    sg.add_node("CF_Processor", cf_subgraph)
     sg.add_node("Join", join_barrier)
-
-    sg.add_edge(START, "BS_Worker")
-    sg.add_edge(START, "IS_Worker")
-    sg.add_edge(START, "CF_Worker")
-
-    sg.add_edge("BS_Worker", "BS_Checker")
-    sg.add_edge("IS_Worker", "IS_Checker")
-    sg.add_edge("CF_Worker", "CF_Checker")
-
-    sg.add_conditional_edges("BS_Checker", route_bs, {"retry": "BS_Worker", "done": "Join"})
-    sg.add_conditional_edges("IS_Checker", route_is, {"retry": "IS_Worker", "done": "Join"})
-    sg.add_conditional_edges("CF_Checker", route_cf, {"retry": "CF_Worker", "done": "Join"})
-
+    
+    # Start all processors in parallel
+    sg.add_edge(START, "BS_Processor")
+    sg.add_edge(START, "IS_Processor")
+    sg.add_edge(START, "CF_Processor")
+    
+    # All processors flow to the join barrier
+    sg.add_edge("BS_Processor", "Join")
+    sg.add_edge("IS_Processor", "Join")
+    sg.add_edge("CF_Processor", "Join")
+    
+    # Join barrier controls the final flow
     sg.add_conditional_edges("Join", join_route, {"wait": "Join", "go": END})
+    
     return sg
 
 

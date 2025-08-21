@@ -19,6 +19,7 @@ from .prompts import (
     AGGREGATOR_SYS,
 )
 from .state import State, merge, log, MAX_RETRIES
+from .pdf_rag import PDFRAGManager
 
 
 def readpdf_agent(state: State) -> State:
@@ -28,6 +29,10 @@ def readpdf_agent(state: State) -> State:
     # 1) If pdf_text already provided upstream, keep it
     existing_text = ctx.get("pdf_text")
     if isinstance(existing_text, str) and existing_text.strip():
+        # Still initialize PDF RAG if we have a path
+        pdf_path_value = ctx.get("pdf_path")
+        if pdf_path_value:
+            _initialize_pdf_rag(pdf_path_value, ctx)
         return merge(state, {"ctx": ctx})
 
     # 2) Build candidate PDF paths: ctx.pdf_path then default TSLA file
@@ -40,6 +45,8 @@ def readpdf_agent(state: State) -> State:
         candidates.append(default_pdf)
 
     extracted_text: str | None = None
+    successful_path: str | None = None
+    
     for path in candidates:
         try:
             if not path.exists():
@@ -61,7 +68,8 @@ def readpdf_agent(state: State) -> State:
             text_joined = "\n".join(pages_text).strip()
             if text_joined:
                 extracted_text = text_joined
-                ctx["pdf_path"] = str(path.resolve())
+                successful_path = str(path.resolve())
+                ctx["pdf_path"] = successful_path
                 break
         except Exception as e:
             log(f"PDF read failed for {path}: {e}")
@@ -71,7 +79,44 @@ def readpdf_agent(state: State) -> State:
         extracted_text = "Dummy PDF text with tables & figures about a fictional company FY2024."
 
     ctx["pdf_text"] = extracted_text
+    
+    # 4) Initialize PDF RAG system if we have a successful path
+    if successful_path:
+        _initialize_pdf_rag(successful_path, ctx)
+    
     return merge(state, {"ctx": ctx})
+
+
+# Global PDF RAG manager instance
+_pdf_rag_manager: PDFRAGManager | None = None
+
+
+def _initialize_pdf_rag(pdf_path: str, ctx: dict) -> None:
+    """Initialize the PDF RAG system."""
+    global _pdf_rag_manager
+    try:
+        if _pdf_rag_manager is None:
+            _pdf_rag_manager = PDFRAGManager()
+        
+        success = _pdf_rag_manager.initialize_from_pdf(pdf_path)
+        ctx["pdf_rag_enabled"] = success
+        
+        if success:
+            # Store some statistics for debugging
+            stats = _pdf_rag_manager.get_statistics()
+            ctx["pdf_rag_stats"] = stats
+            log(f"→ PDF RAG: Initialized with {stats.get('total_chunks', 0)} chunks")
+        else:
+            log("→ PDF RAG: Initialization failed")
+            
+    except Exception as e:
+        log(f"→ PDF RAG: Initialization error: {e}")
+        ctx["pdf_rag_enabled"] = False
+
+
+def get_pdf_rag_manager() -> PDFRAGManager | None:
+    """Get the global PDF RAG manager instance."""
+    return _pdf_rag_manager
 
 
 def planner_agent(state: State) -> State:
@@ -129,114 +174,190 @@ def aggregator(state: State) -> State:
     return merge(state, {"final_report": text})
 
 
-# Workers
-def balance_sheet_worker(state: State) -> State:
-    log("→ [Sub] BalanceSheetWorker (LLM)")
-    user = f"ctx.pdf_text sample: {state.get('ctx', {}).get('pdf_text', '<none>')}"
-    text, in_tok, out_tok = call_llm(MODEL_NAME, BS_SYS, user)
-    log_cost("BS_Worker", "worker", in_tok, out_tok, BS_SYS, text)
-    bs = dict(state.get("bs", {}))
-    r = bs.get("retries", 0)
-    bs.update({"draft": text, "_v": bs.get("_v", 0) + 1, "retries": r})
-    return merge(state, {"bs": bs})
+# Configuration mapping for financial statement types
+STATEMENT_CONFIG = {
+    "balance_sheet": {
+        "sys_prompt": BS_SYS,
+        "state_key": "bs",
+        "log_name": "BS_Worker",
+        "display_name": "BalanceSheetWorker"
+    },
+    "income_statement": {
+        "sys_prompt": IS_SYS,
+        "state_key": "inc",
+        "log_name": "IS_Worker",
+        "display_name": "IncomeStatementWorker"
+    },
+    "cash_flows": {
+        "sys_prompt": CF_SYS,
+        "state_key": "cf",
+        "log_name": "CF_Worker",
+        "display_name": "CashFlowsWorker"
+    }
+}
+
+CHECKER_CONFIG = {
+    "balance_sheet": {
+        "sys_prompt": BS_CHECKER_SYS,
+        "state_key": "bs",
+        "log_name": "BS_Checker",
+        "display_name": "BSChecker"
+    },
+    "income_statement": {
+        "sys_prompt": IS_CHECKER_SYS,
+        "state_key": "inc",
+        "log_name": "IS_Checker",
+        "display_name": "ISChecker"
+    },
+    "cash_flows": {
+        "sys_prompt": CF_CHECKER_SYS,
+        "state_key": "cf",
+        "log_name": "CF_Checker",
+        "display_name": "CFChecker"
+    }
+}
 
 
-def income_statement_worker(state: State) -> State:
-    log("→ [Sub] IncomeStatementWorker (LLM)")
-    user = f"ctx.pdf_text sample: {state.get('ctx', {}).get('pdf_text', '<none>')}"
-    text, in_tok, out_tok = call_llm(MODEL_NAME, IS_SYS, user)
-    log_cost("IS_Worker", "worker", in_tok, out_tok, IS_SYS, text)
-    inc = dict(state.get("inc", {}))
-    r = inc.get("retries", 0)
-    inc.update({"draft": text, "_v": inc.get("_v", 0) + 1, "retries": r})
-    return merge(state, {"inc": inc})
-
-
-def cash_flows_worker(state: State) -> State:
-    log("→ [Sub] CashFlowsWorker (LLM)")
-    user = f"ctx.pdf_text sample: {state.get('ctx', {}).get('pdf_text', '<none>')}"
-    text, in_tok, out_tok = call_llm(MODEL_NAME, CF_SYS, user)
-    log_cost("CF_Worker", "worker", in_tok, out_tok, CF_SYS, text)
-    cf = dict(state.get("cf", {}))
-    r = cf.get("retries", 0)
-    cf.update({"draft": text, "_v": cf.get("_v", 0) + 1, "retries": r})
-    return merge(state, {"cf": cf})
-
-
-# Checkers (with fix to avoid infinite join waiting)
-def bs_checker(state: State) -> State:
-    log("→ [Sub] BSChecker (LLM)")
-    draft = dict(state.get("bs", {})).get("draft", "")
-    text, in_tok, out_tok = call_llm(MODEL_NAME, BS_CHECKER_SYS, draft)
-    log_cost("BS_Checker", "local_checker", in_tok, out_tok, BS_CHECKER_SYS, text)
-    import json
-
-    fb = {"passed": True, "feedback": []}
-    try:
-        fb = json.loads(text)
-    except Exception:
-        pass
-    bs = dict(state.get("bs", {}))
-    r = bs.get("retries", 0)
-    if not fb.get("passed", False):
-        # 修复：当达到重试上限时，写回 passed=True 并自增 _v，避免 Join 无限等待
-        if r + 1 >= MAX_RETRIES:
-            bs.update({"passed": True, "feedback": fb.get("feedback", []), "retries": r + 1, "_v": bs.get("_v", 0) + 1})
+# Generic generator function to replace all worker functions
+def generator(statement_type: str) -> callable:
+    """
+    Generic generator function factory for financial statement generation.
+    
+    Args:
+        statement_type: One of "balance_sheet", "income_statement", "cash_flows"
+    
+    Returns:
+        A function that generates the specified financial statement type
+    """
+    config = STATEMENT_CONFIG.get(statement_type)
+    if not config:
+        raise ValueError(f"Unknown statement type: {statement_type}")
+    
+    def _generator(state: State) -> State:
+        # Check if PDF RAG is available and enabled
+        ctx = state.get('ctx', {})
+        pdf_rag_enabled = ctx.get('pdf_rag_enabled', False)
+        
+        if pdf_rag_enabled and _pdf_rag_manager and _pdf_rag_manager.is_initialized:
+            # Use citation-enhanced generator
+            citation_generator = _pdf_rag_manager.get_citation_enhanced_generator(
+                statement_type, config['sys_prompt']
+            )
+            return citation_generator(state)
         else:
-            bs.update({"passed": False, "feedback": fb.get("feedback", []), "retries": r + 1, "_v": bs.get("_v", 0) + 1})
-    else:
-        bs.update({"passed": True, "feedback": fb.get("feedback", []), "_v": bs.get("_v", 0) + 1})
-    return merge(state, {"bs": bs})
+            # Fallback to original generator logic
+            section_data = dict(state.get(config['state_key'], {}))
+            feedback = section_data.get('feedback', [])
+            existing_draft = section_data.get('draft', '')
+            r = section_data.get("retries", 0)
+            
+            # 区分首次生成和修订模式
+            if feedback and existing_draft:
+                # 修订模式：基于反馈改进现有草稿
+                log(f"→ [Sub] {config['display_name']} (LLM) - Revision Mode (attempt {r + 1})")
+                
+                feedback_text = "\n".join([
+                    f"- {item.get('issue', '')}: {item.get('suggestion', '')}" 
+                    for item in feedback if isinstance(item, dict)
+                ]) if feedback else "General improvements needed"
+                
+                user = f"""Previous draft needs revision based on checker feedback:
+
+FEEDBACK TO ADDRESS:
+{feedback_text}
+
+CURRENT DRAFT TO REVISE:
+{existing_draft}
+
+ORIGINAL DOCUMENT CONTEXT:
+{state.get('ctx', {}).get('pdf_text', '<none>')}
+
+Please revise the draft above to address all the feedback points while maintaining the same structure and style. Focus on fixing the specific issues mentioned."""
+            else:
+                # 首次生成模式
+                log(f"→ [Sub] {config['display_name']} (LLM) - Initial Generation")
+                user = f"ctx.pdf_text sample: {state.get('ctx', {}).get('pdf_text', '<none>')}"
+            
+            text, in_tok, out_tok = call_llm(MODEL_NAME, config['sys_prompt'], user)
+            log_cost(config['log_name'], "worker", in_tok, out_tok, config['sys_prompt'], text)
+            
+            # 清除反馈，因为已经处理了
+            section_data.update({
+                "draft": text, 
+                "_v": section_data.get("_v", 0) + 1, 
+                "retries": r,
+                "feedback": []  # 清除已处理的反馈
+            })
+            
+            return merge(state, {config['state_key']: section_data})
+    
+    return _generator
 
 
-def is_checker(state: State) -> State:
-    log("→ [Sub] ISChecker (LLM)")
-    draft = dict(state.get("inc", {})).get("draft", "")
-    text, in_tok, out_tok = call_llm(MODEL_NAME, IS_CHECKER_SYS, draft)
-    log_cost("IS_Checker", "local_checker", in_tok, out_tok, IS_CHECKER_SYS, text)
-    import json
+# Generic checker function to replace all checker functions
+def checker(statement_type: str) -> callable:
+    """
+    Generic checker function factory for financial statement validation.
+    
+    Args:
+        statement_type: One of "balance_sheet", "income_statement", "cash_flows"
+    
+    Returns:
+        A function that validates the specified financial statement type
+    """
+    config = CHECKER_CONFIG.get(statement_type)
+    if not config:
+        raise ValueError(f"Unknown statement type: {statement_type}")
+    
+    def _checker(state: State) -> State:
+        log(f"→ [Sub] {config['display_name']} (LLM)")
+        draft = dict(state.get(config['state_key'], {})).get("draft", "")
+        text, in_tok, out_tok = call_llm(MODEL_NAME, config['sys_prompt'], draft)
+        log_cost(config['log_name'], "local_checker", in_tok, out_tok, config['sys_prompt'], text)
+        import json
 
-    fb = {"passed": True, "feedback": []}
-    try:
-        fb = json.loads(text)
-    except Exception:
-        pass
-    inc = dict(state.get("inc", {}))
-    r = inc.get("retries", 0)
-    if not fb.get("passed", False):
-        # 修复：当达到重试上限时，写回 passed=True 并自增 _v，避免 Join 无限等待
-        if r + 1 >= MAX_RETRIES:
-            inc.update({"passed": True, "feedback": fb.get("feedback", []), "retries": r + 1, "_v": inc.get("_v", 0) + 1})
+        fb = {"passed": True, "feedback": []}
+        try:
+            fb = json.loads(text)
+        except Exception:
+            pass
+        
+        section_data = dict(state.get(config['state_key'], {}))
+        r = section_data.get("retries", 0)
+        if not fb.get("passed", False):
+            # 修复：当达到重试上限时，写回 passed=True 并自增 _v，避免 Join 无限等待
+            if r + 1 >= MAX_RETRIES:
+                section_data.update({"passed": True, "feedback": fb.get("feedback", []), "retries": r + 1, "_v": section_data.get("_v", 0) + 1})
+            else:
+                section_data.update({"passed": False, "feedback": fb.get("feedback", []), "retries": r + 1, "_v": section_data.get("_v", 0) + 1})
         else:
-            inc.update({"passed": False, "feedback": fb.get("feedback", []), "retries": r + 1, "_v": inc.get("_v", 0) + 1})
-    else:
-        inc.update({"passed": True, "feedback": fb.get("feedback", []), "_v": inc.get("_v", 0) + 1})
-    return merge(state, {"inc": inc})
+            section_data.update({"passed": True, "feedback": fb.get("feedback", []), "_v": section_data.get("_v", 0) + 1})
+        
+        return merge(state, {config['state_key']: section_data})
+    
+    return _checker
 
 
-def cf_checker(state: State) -> State:
-    log("→ [Sub] CFChecker (LLM)")
-    draft = dict(state.get("cf", {})).get("draft", "")
-    text, in_tok, out_tok = call_llm(MODEL_NAME, CF_CHECKER_SYS, draft)
-    log_cost("CF_Checker", "local_checker", in_tok, out_tok, CF_CHECKER_SYS, text)
-    import json
+# Create specific generator functions using the generic factory
+balance_sheet_generator = generator("balance_sheet")
+income_statement_generator = generator("income_statement")
+cash_flows_generator = generator("cash_flows")
 
-    fb = {"passed": True, "feedback": []}
-    try:
-        fb = json.loads(text)
-    except Exception:
-        pass
-    cf = dict(state.get("cf", {}))
-    r = cf.get("retries", 0)
-    if not fb.get("passed", False):
-        # 修复：当达到重试上限时，写回 passed=True 并自增 _v，避免 Join 无限等待
-        if r + 1 >= MAX_RETRIES:
-            cf.update({"passed": True, "feedback": fb.get("feedback", []), "retries": r + 1, "_v": cf.get("_v", 0) + 1})
-        else:
-            cf.update({"passed": False, "feedback": fb.get("feedback", []), "retries": r + 1, "_v": cf.get("_v", 0) + 1})
-    else:
-        cf.update({"passed": True, "feedback": fb.get("feedback", []), "_v": cf.get("_v", 0) + 1})
-    return merge(state, {"cf": cf})
+# Create specific checker functions using the generic factory
+balance_sheet_checker = checker("balance_sheet")
+income_statement_checker = checker("income_statement")
+cash_flows_checker = checker("cash_flows")
+
+# Keep backward compatibility by creating aliases with old names
+balance_sheet_worker = balance_sheet_generator
+income_statement_worker = income_statement_generator
+cash_flows_worker = cash_flows_generator
+bs_checker = balance_sheet_checker
+is_checker = income_statement_checker
+cf_checker = cash_flows_checker
+
+
+
 
 
 def join_barrier(state: State) -> State:
@@ -253,31 +374,41 @@ def join_route(state: State):
     return "wait"
 
 
-def route_bs(state: State):
-    bs = dict(state.get("bs", {}))
-    if bs.get("passed"):
-        return "done"
-    # 仅分支判断，不修改 state
-    if bs.get("retries", 0) >= MAX_RETRIES:
-        return "done"
-    return "retry"
+# Generic router function to replace all route functions
+def router(statement_type: str) -> callable:
+    """
+    Generic router function factory for financial statement routing.
+    
+    Args:
+        statement_type: One of "balance_sheet", "income_statement", "cash_flows"
+    
+    Returns:
+        A function that routes based on the specified financial statement validation status
+    """
+    config = CHECKER_CONFIG.get(statement_type)
+    if not config:
+        raise ValueError(f"Unknown statement type: {statement_type}")
+    
+    def _router(state: State):
+        section_data = dict(state.get(config['state_key'], {}))
+        if section_data.get("passed"):
+            return "done"
+        # 仅分支判断，不修改 state
+        if section_data.get("retries", 0) >= MAX_RETRIES:
+            return "done"
+        return "retry"
+    
+    return _router
 
 
-def route_is(state: State):
-    inc = dict(state.get("inc", {}))
-    if inc.get("passed"):
-        return "done"
-    if inc.get("retries", 0) >= MAX_RETRIES:
-        return "done"
-    return "retry"
+# Create specific router functions using the generic factory
+balance_sheet_router = router("balance_sheet")
+income_statement_router = router("income_statement")
+cash_flows_router = router("cash_flows")
 
-
-def route_cf(state: State):
-    cf = dict(state.get("cf", {}))
-    if cf.get("passed"):
-        return "done"
-    if cf.get("retries", 0) >= MAX_RETRIES:
-        return "done"
-    return "retry"
+# Keep backward compatibility by creating aliases with old names
+route_bs = balance_sheet_router
+route_is = income_statement_router
+route_cf = cash_flows_router
 
 
