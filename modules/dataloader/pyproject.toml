@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dataloader"
+version = "0.1.0"
+description = "arelle/sec-api powered loader that reconstructs BS/IS/CF/SE from SEC 10-Q/XBRL (US-GAAP + extensions)."
+readme = "README.md"
+authors = [{ name = "dataloader", email = "zhangxwsavvy@gmail.com" }]
+license = "GPL-3.0-or-later"
+requires-python = ">=3.12"
+dependencies = [
+    "sec-api>=1.0.32",
+    "requests>=2.32.5",
+    "pandas>=2.3.1",
+    "arelle-release>=2.37.49",
+    "typing-extensions>=4.11.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.2.0", "pytest-cov>=5.0.0", "mypy>=1.10.0", "ruff>=0.5.0"]
+
+[tool.setuptools]
+# 👇 package code is in the current directory (no src/, no nested package dir)
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+# 👇 discover packages in the current directory
+where = ["."]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+addopts = "-q"
+filterwarnings = [
+  "ignore::DeprecationWarning:arelle.*",
+]

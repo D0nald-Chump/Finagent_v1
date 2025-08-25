@@ -1,0 +1,7 @@
+requests>=2.32.5
+pytest
+black
+mypy
+arelle-release >= 2.37.49
+sec-api>=1.0.32
+pandas>=2.3.1

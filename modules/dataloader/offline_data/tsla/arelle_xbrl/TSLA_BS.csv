@@ -1,0 +1,49 @@
+depth,label,qname,2025-07-17,2025-06-30
+0,Statement of Financial Position [Abstract],us-gaap:StatementOfFinancialPositionAbstract,,
+1,Statement [Table],us-gaap:StatementTable,,
+2,Long-Lived Tangible Asset [Axis],us-gaap:PropertyPlantAndEquipmentByTypeAxis,,
+3,Long-Lived Tangible Asset [Domain],us-gaap:PropertyPlantAndEquipmentTypeDomain,,
+4,Operating Lease Vehicles [Member],tsla:OperatingLeaseVehiclesMember,,
+4,Solar Energy Systems [Member],tsla:SolarEnergySystemsMember,,
+2,Statement [Line Items],us-gaap:StatementLineItems,,
+3,Assets [Abstract],us-gaap:AssetsAbstract,,
+4,"Assets, Current [Abstract]",us-gaap:AssetsCurrentAbstract,,
+5,Cash and Cash Equivalent,us-gaap:CashAndCashEquivalentsAtCarryingValue,,15587000000
+5,Short-Term Investments,us-gaap:ShortTermInvestments,,21195000000
+5,"Accounts Receivable, after Allowance for Credit Loss, Current",us-gaap:AccountsReceivableNetCurrent,,3838000000
+5,"Inventory, Net",us-gaap:InventoryNet,,14570000000
+5,"Prepaid Expense and Other Assets, Current",us-gaap:PrepaidExpenseAndOtherAssetsCurrent,,5943000000
+5,"Assets, Current",us-gaap:AssetsCurrent,,61133000000
+4,"Deferred Costs, Leasing, Net, Noncurrent",us-gaap:DeferredCostsLeasingNetNoncurrent,,
+4,Leased Assets Net,tsla:LeasedAssetsNet,,
+4,"Property, Plant and Equipment, Net",us-gaap:PropertyPlantAndEquipmentNet,,38574000000
+4,"Operating Lease, Right-of-Use Asset",us-gaap:OperatingLeaseRightOfUseAsset,,5633000000
+4,"Crypto Asset, Fair Value, Noncurrent",us-gaap:CryptoAssetFairValueNoncurrent,,1235000000
+4,"Intangible Assets, Net (Excluding Goodwill)",us-gaap:IntangibleAssetsNetExcludingGoodwill,,138000000
+4,Goodwill,us-gaap:Goodwill,,258000000
+4,"Deferred Income Tax Assets, Net",us-gaap:DeferredIncomeTaxAssetsNet,,6721000000
+4,"Other Assets, Noncurrent",us-gaap:OtherAssetsNoncurrent,,4857000000
+4,Assets,us-gaap:Assets,,128567000000
+3,Liabilities [Abstract],us-gaap:LiabilitiesAbstract,,
+4,"Liabilities, Current [Abstract]",us-gaap:LiabilitiesCurrentAbstract,,
+5,"Accounts Payable, Current",us-gaap:AccountsPayableCurrent,,13212000000
+5,Accrued And Other Current Liabilities,tsla:AccruedAndOtherCurrentLiabilities,,11519000000
+5,"Contract with Customer, Liability, Current",us-gaap:ContractWithCustomerLiabilityCurrent,,3237000000
+5,Long Term Debt And Finance Leases Current,tsla:LongTermDebtAndFinanceLeasesCurrent,,2040000000
+5,"Liabilities, Current",us-gaap:LiabilitiesCurrent,,30008000000
+4,Long Term Debt And Finance Leases Noncurrent,tsla:LongTermDebtAndFinanceLeasesNoncurrent,,5180000000
+4,"Contract with Customer, Liability, Noncurrent",us-gaap:ContractWithCustomerLiabilityNoncurrent,,3764000000
+4,"Other Liabilities, Noncurrent",us-gaap:OtherLiabilitiesNoncurrent,,11543000000
+4,Liabilities,us-gaap:Liabilities,,50495000000
+3,Commitments and Contingencies,us-gaap:CommitmentsAndContingencies,,
+3,"Redeemable Noncontrolling Interest, Equity, Carrying Amount",us-gaap:RedeemableNoncontrollingInterestEquityCarryingAmount,,61000000
+3,"Equity, Including Portion Attributable to Noncontrolling Interest [Abstract]",us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterestAbstract,,
+4,"Equity, Attributable to Parent [Abstract]",us-gaap:StockholdersEquityAbstract,,
+5,"Preferred Stock, Value, Issued",us-gaap:PreferredStockValue,,0
+5,"Common Stock, Value, Issued",us-gaap:CommonStockValue,,3000000
+5,"Additional Paid in Capital, Common Stock",us-gaap:AdditionalPaidInCapitalCommonStock,,40363000000
+5,"Accumulated Other Comprehensive Income (Loss), Net of Tax",us-gaap:AccumulatedOtherComprehensiveIncomeLossNetOfTax,,158000000
+5,Retained Earnings (Accumulated Deficit),us-gaap:RetainedEarningsAccumulatedDeficit,,36790000000
+5,"Equity, Attributable to Parent",us-gaap:StockholdersEquity,,77314000000
+4,"Equity, Attributable to Noncontrolling Interest",us-gaap:MinorityInterest,,697000000
+3,Liabilities and Equity,us-gaap:LiabilitiesAndStockholdersEquity,,128567000000

@@ -1,0 +1,7 @@
+# ---- macOS ----
+.DS_Store
+# Python packaging artifacts
+*.egg-info/
+*.egg-info
+*.dist-info/
+*.dist-info

@@ -1,0 +1,6 @@
+depth,label,qname,2025-01-01→2025-07-01,2025-04-01→2025-07-01,2025-01-08→2025-01-09,2024-12-02→2024-12-03
+0,Accounting Policies [Abstract],us-gaap:AccountingPoliciesAbstract,,,,
+1,Net Income (Loss) Attributable to Parent,us-gaap:NetIncomeLoss,1581000000,1172000000,,
+1,Buy Out Of Noncontrolling Interest,tsla:BuyOutOfNoncontrollingInterest,0,0,,
+1,"Net Income (Loss) Available to Common Stockholders, Basic",us-gaap:NetIncomeLossAvailableToCommonStockholdersBasic,1581000000,1172000000,,
+1,"Net Income (Loss) Available to Common Stockholders, Diluted",us-gaap:NetIncomeLossAvailableToCommonStockholdersDiluted,1581000000,1172000000,,
