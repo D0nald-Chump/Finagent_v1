@@ -4,7 +4,7 @@ Modular LangGraph-based financial report agent with token-cost tracking.
 
 ## Setup
 
-1. Python 3.10+
+1. Python 3.12+
 2. Install deps:
 
 ```bash
@@ -76,6 +76,16 @@ If `--pdf` is omitted, the app will try to use `TSLA-Q2-2025-Update.pdf` in the 
 - main.py: CLI entry that runs pipeline and exports a notebook
 - requirements.txt
 - README.md
+
+## Financial Statements Retrival
+
+### Example Usage
+```python
+from runtime_libs.finagents_common.financial_statements_retriever import FinancialStatementsRetriever
+
+pd_is = FinancialStatementsRetriever("TSLA", cik="", sec_api_key="", mode="offline").fetch("20250630", "IS")
+print(pd_is)
+```
 
 ## Notes
 
