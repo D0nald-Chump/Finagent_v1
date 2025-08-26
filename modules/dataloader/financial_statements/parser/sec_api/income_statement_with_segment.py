@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Any, Dict, Iterable, Tuple, List, Optional
+from typing import Any, Dict, Iterable, Tuple, List
 
 # --- helpers ---------------------------------------------------------------
 

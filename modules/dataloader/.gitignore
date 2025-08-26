@@ -5,3 +5,4 @@
 *.egg-info
 *.dist-info/
 *.dist-info
+.dataloader_config
