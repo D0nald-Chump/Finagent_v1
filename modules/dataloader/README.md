@@ -13,15 +13,26 @@ pip install --upgrade pip
 pip install -r requirements.txt 
 ```
 
+### 🔑 Local Configuration
+
+This project requires an API key for accessing sec_api parsing service. To keep secrets out of version control,
+we use a hidden config file in `.dataloader_config`. This file is already included in `.gitignore`,
+so it will never be committed.
+
+Simply create a file at:
+`dataloader/`
+and add your keys in `KEY=VALUE` format, one per line. For example:
+```ini
+sec_api_key=${YOUR_SEC_API_KEY}
+```
+
+
 ### Example usage
 ```python
-from dataloader import get_four_statements
+# WIP
 
-frames = get_four_statements(
-    ticker="TSLA",
-    user_agent="FinAgents/1.0 (contact: you@example.com)"
-)
-print(frames["BS"].head())
+
+
 ```
 
 ### Notes
@@ -29,29 +40,3 @@ print(frames["BS"].head())
 - Live integration test is **opt-in**: set `SEC_UA` env var to run it: `SEC_UA="..." pytest -k integration`.
 - By default, we filter to consolidated (no segment axes) and USD/pure units.
 ```
-
----
-
-## LICENSE
-
-MIT License
-
-Copyright (c) 2025 FinAgents
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
